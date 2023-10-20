@@ -1,0 +1,25 @@
+{
+  "name": "freightmatcher",
+  "version": "1.0.0",
+  "description": "receive shipping orders and create routes",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arosenfeld2003/digital_freight_matcher_eng_lab_1.git"
+  },
+  "keywords": [
+    "qwasar",
+    "engineering",
+    "lab",
+    "1"
+  ],
+  "author": "Lorris Belus and Alex Rosenfeld",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/arosenfeld2003/digital_freight_matcher_eng_lab_1/issues"
+  },
+  "homepage": "https://github.com/arosenfeld2003/digital_freight_matcher_eng_lab_1#readme"
+}
