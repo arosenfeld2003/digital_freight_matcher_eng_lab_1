@@ -79,7 +79,7 @@ function calculateDistance(loc1: Location, loc2: Location): number {
  */
 function isLocationOnRoute(location: Location, route: Route): boolean {
     // Check against the origin and destination of the route
-    if (calculateDistance(location, route.locationOrigin) <= 1 || calculateDistance(location, route.locationDestiny) <= 1) {
+    if (calculateDistance(location, route.locationOrigin) <= 1 || calculateDistance(location, route.locationDestination) <= 1) {
         return true;
     }
 
@@ -119,7 +119,7 @@ function deviationTime(distance: number): number {
  * @returns
  */
 function isRouteProfitable(route: Route): boolean {
-    // TODO: Implement this function using Mr. Lightyear's spreadsheet data.
+    // TODO: Implement this function.
     return false;
 }
 
