@@ -1,12 +1,18 @@
 {
   "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src",
+    "outDir": "./",
+    "rootDir": ".",
+    // https://stackoverflow.com/questions/55753163/package-json-is-not-under-rootdir/61467483#61467483
+
+
     /* Visit https://aka.ms/tsconfig to read more about this file */
 
     /* Projects */
     // "incremental": true,                              /* Save .tsbuildinfo files to allow for incremental compilation of projects. */
-    // "composite": true,                                /* Enable constraints that allow a TypeScript project to be used with project references. */
+
+    // https://stackoverflow.com/questions/60029058/project-must-list-all-files-or-use-an-include-pattern
+    //     "composite": true,                                /* Enable constraints that allow a TypeScript project to be used with project references. */
+
     // "tsBuildInfoFile": "./.tsbuildinfo",              /* Specify the path to .tsbuildinfo incremental compilation file. */
     // "disableSourceOfProjectReferenceRedirect": true,  /* Disable preferring source files instead of declaration files when referencing composite projects. */
     // "disableSolutionSearching": true,                 /* Opt a project out of multi-project reference checking when editing. */
@@ -41,7 +47,7 @@
     // "resolvePackageJsonExports": true,                /* Use the package.json 'exports' field when resolving package imports. */
     // "resolvePackageJsonImports": true,                /* Use the package.json 'imports' field when resolving imports. */
     // "customConditions": [],                           /* Conditions to set in addition to the resolver-specific defaults when resolving imports. */
-    // "resolveJsonModule": true,                        /* Enable importing .json files. */
+     "resolveJsonModule": true,                        /* Enable importing .json files. */
     // "allowArbitraryExtensions": true,                 /* Enable importing files with any extension, provided a declaration file is present. */
     // "noResolve": true,                                /* Disallow 'import's, 'require's or '<reference>'s from expanding the number of files TypeScript should add to a project. */
 
@@ -108,6 +114,14 @@
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules"]
+  "files": [
+    "./app/package.json"
+    // do not include src -> avoid TS default behavior
+  ],
+  "include": [
+    "app/src/**/*.ts"
+  ],
+  "exclude": [
+    "./node_modules"
+  ]
 }

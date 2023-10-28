@@ -22,7 +22,7 @@
 
 # Overall Architecture
 
-![architecture](/assets/architecture.png)
+![architecture](/app/assets/architecture.png)
 
 ### Order format (received by the Service)
 
@@ -71,7 +71,7 @@ route: [
 
 ### Current Routes
 
-![routes](/assets/existing_routes.png)
+![routes](/app/assets/existing_routes.png)
 
 
 # References
