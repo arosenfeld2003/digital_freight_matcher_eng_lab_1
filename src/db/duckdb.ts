@@ -1,8 +1,8 @@
-import DuckDB from 'duckdb'
+import duckdb from 'duckdb'
 
-class DuckDBManager {
+export class DuckDBManager {
     private static instance: DuckDBManager;
-    private db: DuckDB.Database | null;
+    private db: duckdb.Database | null;
 
     private constructor() {
         this.db = null;
@@ -17,16 +17,16 @@ class DuckDBManager {
 
     async initDatabase(databasepath: string): Promise<void> {
         try {
-            this.db = new DuckDB.Database(databasepath);
+            this.db = new duckdb.Database(databasepath);
             this.db.connect();
-            console.log('DuckDB Initialized Successfully.');
+            console.log('DuckDB initialized with connection.');
         } catch(e) {
-            console.error('Error initializing DuckB: ', e)
+            console.error('Error initializing DuckDB with connection: ', e)
             throw(e);
         }
     }
 
-    getDatabase(): DuckDB.Database | null {
+    getDatabase(): duckdb.Database | null {
         return this.db;
     }
 }
