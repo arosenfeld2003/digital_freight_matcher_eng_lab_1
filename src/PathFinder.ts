@@ -35,42 +35,159 @@ interface Geometry {
 }
 
 
+class Path {
+ 
+    private geoData: GeoJSON;
+    private static API_KEY: string | undefined;
+
+    constructor()
+    {
+        this.geoData = this.initializeGeoData();
+        Path.API_KEY = process.env.ORS_API_KEY;
+    }
+
+    private initializeGeoData(): GeoJSON {
+        return {
+            type: 'FeatureCollection',
+            metadata: {
+                attribution: 'Default Attribution',
+                service: 'Default Service',
+                timestamp: Date.now(),
+                query: {
+                    coordinates: [],
+                    profile: 'Default Profile',
+                    format: 'Default Format'
+                },
+                engine: {
+                    version: 'Default Version',
+                    build_date: 'Default Build Date',
+                    graph_date: 'Default Graph Date'
+                }
+            },
+            features: [],
+            bbox: [0, 0, 0, 0]
+        };
+    }
+
+    public async setPathInfo(startCoord: string, endCoord: string): Promise<void> {
+        const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${Path.API_KEY}&start=${startCoord}&end=${endCoord}`;
+
+        axios.get(url, {
+            headers: {
+                'Accept': 'application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8'
+            }
+        })
+        .then((response: AxiosResponse<GeoJSON>) => {
+            const coordinates = response.data.features[0].geometry.coordinates;
+            this.geoData = response.data;
+            
+        })
+        .catch((error: AxiosError) => {
+            if (error.response) {
+                console.error('Data:', error.response.data);
+                console.error('Status:', error.response.status);
+                console.error('Headers:', error.response.headers);
+            } else if (error.request) {
+                console.error('No response received:', error.request);
+            } else {
+                console.error('Error:', error.message);
+            }
+        });
+    }
 
 
-const API_KEY: string | undefined = process.env.ORS_API_KEY;
+    public setPathInfoDiagnostic(startCoord: string, endCoord: string): Promise<void> {
+        const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${Path.API_KEY}&start=${startCoord}&end=${endCoord}`;
+    
+        return axios.get(url, {
+            headers: {
+                'Accept': 'application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8'
+            }
+        })
+        .then((response: AxiosResponse<GeoJSON>) => {  
+            console.log('Status:', response.status);
+            console.log('Headers:', JSON.stringify(response.headers));
+            console.log('Body:', response.data);
+    
+            const coordinates = response.data.features[0].geometry.coordinates;
+            console.log('Coordinates:', coordinates);
+            this.geoData = response.data;
+        })
+        .catch((error: AxiosError) => {
+            if (error.response) {
+                console.error('Data:', error.response.data);
+                console.error('Status:', error.response.status);
+                console.error('Headers:', error.response.headers);
+            } else if (error.request) {
+                console.error('No response received:', error.request);
+            } else {
+                console.error('Error:', error.message);
+            }
+            throw error; // Re-throw the error so it can be caught by the caller
+        });
+    }
 
-if (!API_KEY) {
-    console.error("API key not set in environment variables.");
-    process.exit(1);
+    public getPathData(): [number, number][]
+    {
+        const coordinates = this.geoData.features[0].geometry.coordinates;
+        return coordinates;
+    }
+
 }
 
-const startCoords = "8.681495,49.41461";
-const endCoords = "8.687872,49.420318";
-const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${API_KEY}&start=${startCoords}&end=${endCoords}`;
 
-axios.get(url, {
-    headers: {
-        'Accept': 'application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8'
+async function loadAndDisplayPath() {
+    const rspObj = new Path();
+    try {
+        await rspObj.setPathInfoDiagnostic("8.681495,49.41461", "8.687872,49.420318");
+        console.log(rspObj.getPathData());
+    } catch (error) {
+        console.error('An error occurred:', error);
     }
-})
-.then((response: AxiosResponse<GeoJSON>) => {  // <-- Notice the generic type here
-    console.log('Status:', response.status);
-    console.log('Headers:', JSON.stringify(response.headers));
-    console.log('Body:', response.data);
+}
 
-    // Accessing the coordinates of the first feature's geometry:
-    const coordinates = response.data.features[0].geometry.coordinates;
-    console.log('Coordinates:', coordinates);
+// loadAndDisplayPath()
 
-})
-.catch((error: AxiosError) => {
-    if (error.response) {
-        console.error('Data:', error.response.data);
-        console.error('Status:', error.response.status);
-        console.error('Headers:', error.response.headers);
-    } else if (error.request) {
-        console.error('No response received:', error.request);
-    } else {
-        console.error('Error:', error.message);
-    }
-});
+// const rspObj = new Path();
+// rspObj.setPathInfo("8.681495,49.41461", "8.687872,49.420318");
+// rspObj.setPathInfoDiagnostic("8.681495,49.41461", "8.687872,49.420318");
+
+// loadAndDisplayPath();
+
+// const API_KEY: string | undefined = process.env.ORS_API_KEY;
+
+// if (!API_KEY) {
+//     console.error("API key not set in environment variables.");
+//     process.exit(1);
+// }
+
+// const startCoords = "8.681495,49.41461";
+// const endCoords = "8.687872,49.420318";
+// const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${API_KEY}&start=${startCoords}&end=${endCoords}`;
+
+// axios.get(url, {
+//     headers: {
+//         'Accept': 'application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8'
+//     }
+// })
+// .then((response: AxiosResponse<GeoJSON>) => {  // <-- Notice the generic type here
+//     console.log('Status:', response.status);
+//     console.log('Headers:', JSON.stringify(response.headers));
+//     console.log('Body:', response.data);
+
+//     // Accessing the coordinates of the first feature's geometry:
+//     const coordinates = response.data.features[0].geometry.coordinates;
+//     console.log('Coordinates:', coordinates);
+
+// })
+// .catch((error: AxiosError) => {
+//     if (error.response) {
+//         console.error('Data:', error.response.data);
+//         console.error('Status:', error.response.status);
+//         console.error('Headers:', error.response.headers);
+//     } else if (error.request) {
+//         console.error('No response received:', error.request);
+//     } else {
+//         console.error('Error:', error.message);
+//     }
+// });
