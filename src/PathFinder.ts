@@ -1,5 +1,5 @@
 import axios, { AxiosResponse, AxiosError } from 'axios';
-
+type coord = [number, number]
 
 interface GeoJSON {
     type: string;
@@ -30,7 +30,7 @@ interface Feature {
 }
 
 interface Geometry {
-    coordinates: [number, number][];
+    coordinates: coord[];
     type: string;
 }
 
@@ -127,7 +127,7 @@ class Path {
         });
     }
 
-    public getPathData(): [number, number][]
+    public getGeoData(): coord[]
     {
         const coordinates = this.geoData.features[0].geometry.coordinates;
         return coordinates;
@@ -140,11 +140,19 @@ async function loadAndDisplayPath() {
     const rspObj = new Path();
     try {
         await rspObj.setPathInfoDiagnostic("8.681495,49.41461", "8.687872,49.420318");
-        console.log(rspObj.getPathData());
+        console.log(rspObj.getGeoData());
     } catch (error) {
         console.error('An error occurred:', error);
     }
 }
+
+
+
+
+
+
+
+
 
 // loadAndDisplayPath()
 
