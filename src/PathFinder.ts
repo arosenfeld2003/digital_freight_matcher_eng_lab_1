@@ -1,5 +1,7 @@
 import axios, { AxiosResponse, AxiosError } from 'axios';
-type coord = [number, number]
+import { Queue } from "./Queue";
+
+type coord_t = [number, number]
 
 interface GeoJSON {
     type: string;
@@ -30,12 +32,11 @@ interface Feature {
 }
 
 interface Geometry {
-    coordinates: coord[];
+    coordinates: coord_t[];
     type: string;
 }
 
-
-class Path {
+export class Path {
  
     private geoData: GeoJSON;
     private static API_KEY: string | undefined;
@@ -95,7 +96,6 @@ class Path {
         });
     }
 
-
     public setPathInfoDiagnostic(startCoord: string, endCoord: string): Promise<void> {
         const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${Path.API_KEY}&start=${startCoord}&end=${endCoord}`;
     
@@ -127,14 +127,13 @@ class Path {
         });
     }
 
-    public getGeoData(): coord[]
+    public getGeoData(): coord_t[]
     {
         const coordinates = this.geoData.features[0].geometry.coordinates;
         return coordinates;
     }
 
 }
-
 
 async function loadAndDisplayPath() {
     const rspObj = new Path();
@@ -147,8 +146,15 @@ async function loadAndDisplayPath() {
 }
 
 
-
-
+export async function loadAndStorePath(queue: Queue<Path>, startCoord: string, endCoord: string) {
+    const rspObj = new Path();
+    try {
+        await rspObj.setPathInfoDiagnostic(startCoord, endCoord);
+        queue.enqueue(rspObj);
+    } catch (error) {
+        console.error('An error occurred:', error);
+    }
+}
 
 
 

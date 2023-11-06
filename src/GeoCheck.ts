@@ -1,6 +1,6 @@
 import * as turf from '@turf/turf';
 
-type coord = [number, number]
+type coord_t = [number, number]
 
 
 function isWithinDistance(distanceToPoint: number): boolean {
@@ -12,7 +12,7 @@ function isWithinDistance(distanceToPoint: number): boolean {
     }
 }
 
-function GeoCheck(newcoord: coord, startCoord: coord, endCoord: coord ): boolean  
+export function GeoCheck(newcoord: coord_t, startCoord: coord_t, endCoord: coord_t ): boolean  
 {   
     const coordToCheck = turf.point(newcoord);
     const start = turf.point(startCoord);
