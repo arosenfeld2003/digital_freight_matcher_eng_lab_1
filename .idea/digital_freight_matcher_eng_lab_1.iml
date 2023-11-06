@@ -9,5 +9,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="duckdb" />
+    <orderEntry type="module" module-name="2023_job_search" />
   </component>
 </module>
