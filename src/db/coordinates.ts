@@ -1,51 +1,51 @@
-import { duckDBManager } from "@db/duckdb";
-import duckdb from "duckdb";
-export async function createCoordinatesTable(): Promise<duckdb.TableData> {
-    let table = new Promise<duckdb.TableData>((resolve, reject) => {
-        const db = duckDBManager.getDatabase();
-        if (!db) {
-            console.log(`db is null`);
-            reject('db is null');
-        } else {
-            console.log(`db: ${JSON.stringify(db)}`);
-            db.all(
-                'CREATE TABLE IF NOT EXISTS coordinates(id INTEGER PRIMARY KEY AUTOINCREMENT,\n' +
-                '                latitude REAL NOT NULL,\n' +
-                '                longitude REAL NOT NULL,\n' +
-                '                route_id INTEGER NOT NULL,\n' +
-                '                client_id INTEGER NOT NULL' +
-                ')', function(err, result) {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        console.log(`Result of create table: ${result}`);
-                        resolve(result);
-                    }
-                }
-            )
-        }
-    });
-    return await table;
+// import { duckDBManager } from "@db/duckdb";
+import type duckdb from 'duckdb'
+export function createCoordinatesTable (con: duckdb.Connection): duckdb.TableData | undefined {
+  let data: duckdb.TableData | undefined
+  con.all(
+    'CREATE TABLE IF NOT EXISTS coordinates(id INTEGER PRIMARY KEY AUTOINCREMENT,\n' +
+    '                latitude REAL NOT NULL,\n' +
+    '                longitude REAL NOT NULL,\n' +
+    '                route_id INTEGER NOT NULL,\n' +
+    '                client_id INTEGER NOT NULL' +
+    ')', (err: any, res: any) => {
+      if (err !== undefined) {
+        console.error(err)
+        throw (err)
+      } else {
+        con.all('SELECT * FROM coordinates', (err, res) => {
+          if (err !== undefined) {
+            console.error(err)
+            // eslint-disable-next-line @typescript-eslint/no-throw-literal
+            throw (err)
+          }
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-expect-error
+          data = res[0]
+        })
+      }
+    }
+  )
+  return data
 }
 
-export async function insertCoordinate(coordinateData: {
-    latitude: number;
-    longitude: number;
-    route_id: number;
-    client_id: number;
-}): Promise<duckdb.TableData> {
-    const db = duckDBManager.getDatabase();
-    return await new Promise((resolve, reject) => {
-        db?.all(
-            `INSERT INTO coordinates (latitude, longitude, route_id, client_id) VALUES (?, ?, ?, ?)`,
-            [coordinateData.latitude, coordinateData.longitude, coordinateData.route_id, coordinateData.client_id],
-            function (err, data) {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(data);
-                }
-            }
-        );
-    });
+export function insertCoordinate (con: duckdb.Connection, coordinateData: {
+  latitude: number
+  longitude: number
+  route_id: number
+  client_id: number
+}): boolean {
+  const stmt = con.prepare(
+    'INSERT INTO coordinates (latitude, longitude, route_id, client_id) VALUES (?, ?, ?, ?)',
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
+    [coordinateData.latitude, coordinateData.longitude, coordinateData.route_id, coordinateData.client_id]
+  )
+  stmt.all(function (err: any, res: any) {
+    if (err !== undefined) {
+      console.error(err)
+      throw (err)
+    }
+  })
+  return true
 }
