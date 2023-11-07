@@ -1,13 +1,13 @@
 import { duckDBManager } from "@db/duckdb";
 import duckdb from "duckdb";
 export async function createCoordinatesTable(): Promise<duckdb.TableData> {
-    return new Promise((resolve, reject) => {
+    let table = new Promise<duckdb.TableData>((resolve, reject) => {
         const db = duckDBManager.getDatabase();
         if (!db) {
             console.log(`db is null`);
             reject('db is null');
         } else {
-            // console.log(`db: ${JSON.stringify(db)}`);
+            console.log(`db: ${JSON.stringify(db)}`);
             db.all(
                 'CREATE TABLE IF NOT EXISTS coordinates(id INTEGER PRIMARY KEY AUTOINCREMENT,\n' +
                 '                latitude REAL NOT NULL,\n' +
@@ -17,17 +17,15 @@ export async function createCoordinatesTable(): Promise<duckdb.TableData> {
                 ')', function(err, result) {
                     if (err) {
                         reject(err);
+                    } else {
+                        console.log(`Result of create table: ${result}`);
+                        resolve(result);
                     }
                 }
             )
-            const data = db.all(`SELECT * FROM coordinates`, function(err, result) {
-                if (err) {
-                    reject(err);
-                }
-                resolve(result);
-            });
         }
     });
+    return await table;
 }
 
 export async function insertCoordinate(coordinateData: {
