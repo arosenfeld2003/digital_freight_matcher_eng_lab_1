@@ -26,10 +26,10 @@ describe('Coordinates Table Tests', () => {
     });
 
     it('should create the coordinates table', async() => {
-        const coordinatesTable = new Promise<duckdb.TableData>(resolve => {
-            let queryResult = createCoordinatesTable();
+        const coordinatesTable = new Promise<duckdb.TableData>(async (resolve, reject) => {
+            let queryResult = await createCoordinatesTable();
             if (!queryResult) {
-                throw({ coordinatedTable: 'coordinatesTable not created' });
+                reject(queryResult);
             }
             resolve(queryResult);
         })

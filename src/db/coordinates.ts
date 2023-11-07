@@ -5,9 +5,9 @@ export async function createCoordinatesTable(): Promise<duckdb.TableData> {
         const db = duckDBManager.getDatabase();
         if (!db) {
             console.log(`db is null`);
-            throw {coordinates: 'coordinates table not created'};
+            reject('db is null');
         } else {
-            console.log(`db: ${db}`);
+            // console.log(`db: ${JSON.stringify(db)}`);
             db.all(
                 'CREATE TABLE IF NOT EXISTS coordinates(id INTEGER PRIMARY KEY AUTOINCREMENT,\n' +
                 '                latitude REAL NOT NULL,\n' +
@@ -18,8 +18,6 @@ export async function createCoordinatesTable(): Promise<duckdb.TableData> {
                     if (err) {
                         reject(err);
                     }
-                    console.log(result);
-                    resolve(result);
                 }
             )
             const data = db.all(`SELECT * FROM coordinates`, function(err, result) {
