@@ -12,7 +12,7 @@ function isWithinDistance(distanceToPoint: number): boolean {
     }
 }
 
-export function GeoCheck(newcoord: coord_t, startCoord: coord_t, endCoord: coord_t ): boolean  
+export function GeoCheck(newcoord: coord_t, startCoord: coord_t, endCoord: coord_t): boolean  
 {   
     const coordToCheck = turf.point(newcoord);
     const start = turf.point(startCoord);

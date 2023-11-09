@@ -97,7 +97,7 @@ export class Path {
     }
 
     public setPathInfoDiagnostic(startCoord: string, endCoord: string): Promise<void> {
-        const url = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${Path.API_KEY}&start=${startCoord}&end=${endCoord}`;
+        const url = `https://api.openrouteservice.org/v2/directions/driving-hgv?api_key=${Path.API_KEY}&start=${startCoord}&end=${endCoord}`;
     
         return axios.get(url, {
             headers: {
