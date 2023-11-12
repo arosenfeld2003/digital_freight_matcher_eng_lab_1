@@ -25,6 +25,8 @@ if (db !== undefined) {
       console.error(val)
     }
   })
+} else {
+  console.log('DB.getInstance() returned undefined')
 }
 
 // Define routes and CRUD operations...

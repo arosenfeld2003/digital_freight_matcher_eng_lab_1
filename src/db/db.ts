@@ -25,15 +25,19 @@ class DB {
     return DB.instance
   }
 
+  public static async closePool (): Promise<void> {
+    await DB.instance.pool.end()
+  }
+
   public async query (text: string, params?: any[]): Promise<any> {
+    const client = await this.pool.connect()
+    let ret: any;
     try {
-      const client = await this.pool.connect()
       const [queryRes] = await Promise.all([client.query(text, params)])
       client.release()
       return queryRes
     } catch (e) {
       console.error(e)
-      throw (e)
     }
   }
 

@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "ts-node src/index.ts",
-    "test": "node --experimental-vm-modules ./node_modules/.bin/jest",
+    "test": "node --experimental-vm-modules ./node_modules/.bin/jest --detectOpenHandles",
     "build": "tsc"
   },
   "repository": {
