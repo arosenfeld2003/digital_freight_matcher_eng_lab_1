@@ -7,19 +7,17 @@ export interface Route {
 
 export interface Cargo {
   id: number
-  order_id: number
-  package_id: number
+  truck_id: number
 }
 
 export interface Location {
   id: number
   latitude: number
   longitude: number
-  route_id: number
   client_id: number
 }
 
-export interface Order {
+export interface Request {
   id: number
   origin_location_id: number
   destination_location_id: number
@@ -28,7 +26,7 @@ export interface Order {
   contract_type: string
 }
 
-export interface Package {
+export interface Parcel {
   id: number
   cargo_id: number
   volume: number

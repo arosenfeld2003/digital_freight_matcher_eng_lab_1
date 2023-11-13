@@ -65,7 +65,7 @@ class DB {
                   route_id INT,
                   client_id INT
               );
-              CREATE TABLE IF NOT EXISTS "order" (
+              CREATE TABLE IF NOT EXISTS request (
                   id SERIAL PRIMARY KEY,
                   origin_location_id INT,
                   destination_location_id INT,
@@ -73,7 +73,7 @@ class DB {
                   route_id INT,
                   contract_type VARCHAR(255)
               );
-              CREATE TABLE IF NOT EXISTS package (
+              CREATE TABLE IF NOT EXISTS parcel (
                   id SERIAL PRIMARY KEY,
                   cargo_id INT,
                   volume INT,
@@ -93,28 +93,24 @@ class DB {
               );
           `
       const foreignKeyQueries = `
-              ALTER TABLE cargo ADD CONSTRAINT fk_cargo_order
-                  FOREIGN KEY (order_id) REFERENCES "order"(id);
-              ALTER TABLE cargo ADD CONSTRAINT fk_cargo_package
-                  FOREIGN KEY (package_id) REFERENCES package(id);
-              ALTER TABLE location ADD CONSTRAINT fk_location_route
-                  FOREIGN KEY (route_id) REFERENCES route(id);
               ALTER TABLE location ADD CONSTRAINT fk_location_client
                   FOREIGN KEY (client_id) REFERENCES client(id);
-              ALTER TABLE "order" ADD CONSTRAINT fk_order_origin_location
+              ALTER TABLE "request" ADD CONSTRAINT fk_request_origin_location
                   FOREIGN KEY (origin_location_id) REFERENCES location(id);
-              ALTER TABLE "order" ADD CONSTRAINT fk_order_destination_location
+              ALTER TABLE "request" ADD CONSTRAINT fk_request_destination_location
                   FOREIGN KEY (destination_location_id) REFERENCES location(id);
-              ALTER TABLE "order" ADD CONSTRAINT fk_order_cargo
+              ALTER TABLE "request" ADD CONSTRAINT fk_request_cargo
                   FOREIGN KEY (cargo_id) REFERENCES cargo(id);
-              ALTER TABLE "order" ADD CONSTRAINT fk_order_route
+              ALTER TABLE "request" ADD CONSTRAINT fk_request_route
                   FOREIGN KEY (route_id) REFERENCES route(id);
-              ALTER TABLE package ADD CONSTRAINT fk_package_cargo
+              ALTER TABLE "parcel" ADD CONSTRAINT fk_parcel_cargo
                   FOREIGN KEY (cargo_id) REFERENCES cargo(id);
+              ALTER TABLE "cargo" ADD CONSTRAINT fk_cargo_truck
+                  FOREIGN KEY (truck_id) REFERENCES truck(id);
        `
       const tables = await this.query(getTablesQuery)
-      // default table 'order' in public postgres schema contains indexes
-      if (tables.rowCount === 1) {
+      // if brand new database, instantiate with the requisite tables
+      if (tables.rowCount === 0) {
         await this.query(tableQueries)
         await this.query(foreignKeyQueries)
         console.log('Default DB tables created on public schema')
