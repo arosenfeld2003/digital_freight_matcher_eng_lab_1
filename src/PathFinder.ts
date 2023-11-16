@@ -1,4 +1,5 @@
 import axios, { AxiosResponse, AxiosError } from 'axios';
+import * as turf from '@turf/turf';
 import { Queue } from "./Queue";
 
 type coord_t = [number, number]
@@ -34,6 +35,28 @@ interface Feature {
 interface Geometry {
     coordinates: coord_t[];
     type: string;
+}
+
+
+function isWithinDistance(distanceToPoint: number): boolean {
+    const maxDistance = 1;
+    if (distanceToPoint <= maxDistance ) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+export function GeoCheck(newcoord: coord_t, startCoord: coord_t, endCoord: coord_t): boolean  
+{
+    const coordToCheck = turf.point(newcoord);
+    const start = turf.point(startCoord);
+    const end = turf.point(endCoord);
+    const lineSegment = turf.lineString([start.geometry.coordinates, end.geometry.coordinates]);
+    const nearestPointOnLine = turf.nearestPointOnLine(lineSegment, coordToCheck);
+    const distanceToPoint = turf.distance(coordToCheck, nearestPointOnLine, { units: 'kilometers' }); 
+    const result = isWithinDistance(distanceToPoint);
+    return result;
 }
 
 export class Path {
@@ -132,13 +155,12 @@ export class Path {
         const coordinates = this.geoData.features[0].geometry.coordinates;
         return coordinates;
     }
-
 }
 
-async function loadAndDisplayPath() {
+async function loadAndDisplayPath(queue: Queue<Path>, startCoord: string, endCoord: string) {
     const rspObj = new Path();
     try {
-        await rspObj.setPathInfoDiagnostic("8.681495,49.41461", "8.687872,49.420318");
+        await rspObj.setPathInfoDiagnostic(startCoord, endCoord);
         console.log(rspObj.getGeoData());
     } catch (error) {
         console.error('An error occurred:', error);
@@ -149,7 +171,7 @@ async function loadAndDisplayPath() {
 export async function loadAndStorePath(queue: Queue<Path>, startCoord: string, endCoord: string) {
     const rspObj = new Path();
     try {
-        await rspObj.setPathInfoDiagnostic(startCoord, endCoord);
+        await rspObj.setPathInfo(startCoord, endCoord);
         queue.enqueue(rspObj);
     } catch (error) {
         console.error('An error occurred:', error);
