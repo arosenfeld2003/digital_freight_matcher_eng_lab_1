@@ -34,8 +34,9 @@ class DB {
     let ret: any;
     try {
       const [queryRes] = await Promise.all([client.query(text, params)])
+      ret = queryRes;
       client.release()
-      return queryRes
+      return ret;
     } catch (e) {
       console.error(e)
     }
@@ -46,73 +47,95 @@ class DB {
       const getTablesQuery = `
         SELECT * FROM pg_catalog.pg_tables WHERE schemaname = 'public';
       `
-      const tableQueries = `
-              CREATE TABLE IF NOT EXISTS route (
-                  id SERIAL PRIMARY KEY,
-                  origin VARCHAR(255),
-                  destination VARCHAR(255),
-                  profitability INT
-              );
-              CREATE TABLE IF NOT EXISTS cargo (
-                  id SERIAL PRIMARY KEY,
-                  order_id INT,
-                  package_id INT
-              );
-              CREATE TABLE IF NOT EXISTS location (
-                  id SERIAL PRIMARY KEY,
-                  latitude INT,
-                  longitude INT,
-                  route_id INT,
-                  client_id INT
-              );
-              CREATE TABLE IF NOT EXISTS request (
-                  id SERIAL PRIMARY KEY,
-                  origin_location_id INT,
-                  destination_location_id INT,
-                  cargo_id INT,
-                  route_id INT,
-                  contract_type VARCHAR(255)
-              );
-              CREATE TABLE IF NOT EXISTS parcel (
-                  id SERIAL PRIMARY KEY,
-                  cargo_id INT,
-                  volume INT,
-                  weight INT,
-                  type VARCHAR(255)
-              );
-              CREATE TABLE IF NOT EXISTS truck (
-                  id SERIAL PRIMARY KEY,
-                  autonomy VARCHAR(255),
-                  capacity INT,
-                  type VARCHAR(255)
-              );
-              CREATE TABLE IF NOT EXISTS client (
-                  id SERIAL PRIMARY KEY,
-                  company_name VARCHAR(255),
-                  company_client_id INT
-              );
-          `
-      const foreignKeyQueries = `
-              ALTER TABLE location ADD CONSTRAINT fk_location_client
-                  FOREIGN KEY (client_id) REFERENCES client(id);
-              ALTER TABLE "request" ADD CONSTRAINT fk_request_origin_location
-                  FOREIGN KEY (origin_location_id) REFERENCES location(id);
-              ALTER TABLE "request" ADD CONSTRAINT fk_request_destination_location
-                  FOREIGN KEY (destination_location_id) REFERENCES location(id);
-              ALTER TABLE "request" ADD CONSTRAINT fk_request_cargo
-                  FOREIGN KEY (cargo_id) REFERENCES cargo(id);
-              ALTER TABLE "request" ADD CONSTRAINT fk_request_route
-                  FOREIGN KEY (route_id) REFERENCES route(id);
-              ALTER TABLE "parcel" ADD CONSTRAINT fk_parcel_cargo
-                  FOREIGN KEY (cargo_id) REFERENCES cargo(id);
-              ALTER TABLE "cargo" ADD CONSTRAINT fk_cargo_truck
-                  FOREIGN KEY (truck_id) REFERENCES truck(id);
-       `
-      const tables = await this.query(getTablesQuery)
-      // if brand new database, instantiate with the requisite tables
+        const tableQueries = `
+            CREATE TABLE IF NOT EXISTS truck (
+                id SERIAL PRIMARY KEY,
+                max_weight INT,
+                max_volume INT,
+                cpm INT,
+                avg_spd INT,
+                type VARCHAR(255),
+                autonomy VARCHAR(255)
+            );
+            CREATE TABLE IF NOT EXISTS route (
+                id SERIAL PRIMARY KEY,
+                truck_id INT,
+                max_time INT,
+                profitability INT
+            );
+            CREATE TABLE IF NOT EXISTS location (
+                id SERIAL PRIMARY KEY,
+                latitude NUMERIC,
+                longitude NUMERIC
+            );
+            CREATE TABLE IF NOT EXISTS stop (
+                id SERIAL PRIMARY KEY,
+                location_id INT,
+                drop_time INT,
+                previous_stop_id INT,
+                next_stop_id INT,
+                route_id INT
+            );
+            CREATE TABLE IF NOT EXISTS client (
+                id SERIAL PRIMARY KEY,
+                company_name VARCHAR(255),
+                company_client_id INT
+            );
+            CREATE TABLE IF NOT EXISTS request (
+                id SERIAL PRIMARY KEY,
+                client_id INT,
+                route_id INT,
+                origin_stop_id INT,
+                destination_stop_id INT,
+                contract_type VARCHAR(255)
+            );
+            CREATE TABLE IF NOT EXISTS packagetype (
+                id SERIAL PRIMARY KEY,
+                volume INT,
+                weight INT,
+                name VARCHAR(255)
+            );
+            CREATE TABLE IF NOT EXISTS package (
+                id SERIAL PRIMARY KEY,
+                request_id INT,
+                packagetype_id INT
+            );
+        `;
+
+        const foreignKeyQueries = `
+            ALTER TABLE route ADD CONSTRAINT fk_route_truck
+                FOREIGN KEY (truck_id) REFERENCES truck(id);
+            ALTER TABLE stop ADD CONSTRAINT fk_stop_location
+                FOREIGN KEY (location_id) REFERENCES location(id);
+            ALTER TABLE stop ADD CONSTRAINT fk_stop_previous_stop
+                FOREIGN KEY (previous_stop_id) REFERENCES stop(id);
+            ALTER TABLE stop ADD CONSTRAINT fk_stop_next_stop
+                FOREIGN KEY (next_stop_id) REFERENCES stop(id);
+            ALTER TABLE stop ADD CONSTRAINT fk_stop_route
+                FOREIGN KEY (route_id) REFERENCES route(id);
+            ALTER TABLE request ADD CONSTRAINT fk_request_client
+                FOREIGN KEY (client_id) REFERENCES client(id);
+            ALTER TABLE request ADD CONSTRAINT fk_request_route
+                FOREIGN KEY (route_id) REFERENCES route(id);
+            ALTER TABLE request ADD CONSTRAINT fk_request_origin_stop
+                FOREIGN KEY (origin_stop_id) REFERENCES stop(id);
+            ALTER TABLE request ADD CONSTRAINT fk_request_destination_stop
+                FOREIGN KEY (destination_stop_id) REFERENCES stop(id);
+            ALTER TABLE package ADD CONSTRAINT fk_package_request
+                FOREIGN KEY (request_id) REFERENCES request(id);
+            ALTER TABLE package ADD CONSTRAINT fk_package_packagetype
+                FOREIGN KEY (packagetype_id) REFERENCES packagetype(id);
+        `;
+      let tables = await this.query(getTablesQuery);
+      // if new database, instantiate with the requisite tables
       if (tables.rowCount === 0) {
-        await this.query(tableQueries)
-        await this.query(foreignKeyQueries)
+        try {
+          await this.query(tableQueries)
+          await this.query(foreignKeyQueries);
+        } catch (e: any) {
+          console.error(e);
+          return e;
+        }
         console.log('Default DB tables created on public schema')
       } else {
         console.log('DB public schema already contains tables')
