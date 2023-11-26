@@ -4,6 +4,7 @@ import bodyParser from 'body-parser'
 import morgan from 'morgan'
 import dotenv from 'dotenv'
 import * as process from 'process'
+import { Routes } from "./routes";
 
 const app = express()
 dotenv.config() // Load environment variables from .env file
@@ -21,6 +22,9 @@ if (db !== undefined) {
     // Test the database connection
     if (val === true) {
       console.log('DB successfully instantiated')
+      db.seedLocations()
+        .then(() => console.log('Locations seeded'))
+        .catch(err => console.error('Error seeding locations:', err));
     } else {
       console.error(val)
     }
@@ -30,6 +34,15 @@ if (db !== undefined) {
 }
 
 // Define routes and CRUD operations...
+let routes: Routes = {};
+
+async function initializeRoutes() {
+  routes = await db.fetchRoutes();
+}
+
+initializeRoutes().then(() => {
+  console.log('Routes fetched and stored locally');
+});
 
 // Start your Express server
 const port = process.env.PG_PORT

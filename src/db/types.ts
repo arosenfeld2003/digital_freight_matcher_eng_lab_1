@@ -7,6 +7,7 @@ export interface Route {
 
 export interface Stop {
   id: number
+  request_id: number
   location_id: number
   drop_time: number // extra time necessary for a delivery - constant of 15 mins
   previous_stop_id: number
@@ -26,6 +27,7 @@ export interface Request {
   route_id: number // could be null
   origin_stop_id: number
   destination_stop_id: number
+  income: number
   contract_type: string
 }
 

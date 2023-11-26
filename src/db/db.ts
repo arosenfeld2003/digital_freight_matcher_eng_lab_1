@@ -1,6 +1,7 @@
 import { Pool } from 'pg'
 import dotenv from 'dotenv'
 import process from 'process'
+import { Routes, StopNode } from "../routes";
 
 dotenv.config()
 
@@ -42,6 +43,21 @@ class DB {
     }
   }
 
+  // method to query for existing routes
+  public async fetchRoutes(): Promise<Routes> {
+    const routes: Routes = {};
+    const routeResults = await this.query('SELECT * FROM route');
+    for (const route of routeResults.rows) {
+      const stopsResult = await this.query('SELECT * FROM stop WHERE route_id = $1', [route.id]);
+      const stopsMap = new Map<number, StopNode>();
+      for (const stop of stopsResult.rows) {
+        stopsMap.set(stop.id, stop);
+      }
+      routes[route.id] = { id: route.id, stops: stopsMap };
+    }
+    return routes;
+  }
+
   public async createTables (): Promise<Error | true> {
     try {
       const getTablesQuery = `
@@ -70,6 +86,7 @@ class DB {
             );
             CREATE TABLE IF NOT EXISTS stop (
                 id SERIAL PRIMARY KEY,
+                request_id INT,
                 location_id INT,
                 drop_time INT,
                 previous_stop_id INT,
@@ -87,6 +104,7 @@ class DB {
                 route_id INT,
                 origin_stop_id INT,
                 destination_stop_id INT,
+                income INT,
                 contract_type VARCHAR(255)
             );
             CREATE TABLE IF NOT EXISTS packagetype (
@@ -125,6 +143,8 @@ class DB {
                 FOREIGN KEY (request_id) REFERENCES request(id);
             ALTER TABLE package ADD CONSTRAINT fk_package_packagetype
                 FOREIGN KEY (packagetype_id) REFERENCES packagetype(id);
+            ALTER TABLE stop ADD CONSTRAINT fk_stop_request
+                FOREIGN KEY (request_id) REFERENCES request(id);
         `;
       let tables = await this.query(getTablesQuery);
       // if new database, instantiate with the requisite tables
@@ -144,6 +164,23 @@ class DB {
       return e
     }
     return true
+  }
+
+  // seed with locations for pre-existing routes if they don't already exist
+  public async seedLocations(): Promise<void> {
+    const pickupLocation = [33.75441382, -84.38752988];
+    const destinationLocations = [
+      [34.91612101, -85.11039247],
+      [33.46767162, -81.89207679],
+      [32.08152969, -80.97733964],
+      [31.57704107, -84.18076688],
+      [32.46617101, -85.15879278]
+    ];
+
+    await this.query('INSERT INTO location (latitude, longitude) VALUES ($1, $2)', pickupLocation);
+    for (const loc of destinationLocations) {
+      await this.query('INSERT INTO location (latitude, longitude) VALUES ($1, $2)', loc);
+    }
   }
 }
 

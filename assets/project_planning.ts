@@ -144,4 +144,92 @@ function calculateWorkTime(route: Route): number {
     return 0;
 }
 
+/*
+* interface Route {
+* 	- locations
+* 	- stops
+* }
+*
+* interface Request {
+*
+* }
+*
+*
+*
+* Request (input): pickup, dropoff, # of packages
+* 	-> input total # of packages into the DB with request ID
+*
+* // Program Logic
+*
+* checkRequest(request) {
+*			let validRoutes = []
+*
+* 		// returns the weight upon stop ARRIVAL (before drop or pickup)
+* 		getWeightAtStops(routeId) {
+* 			let stopWeights = []
+* 			get all stops for the route;
+* 			totalWeight = 0
+* 			for each stop
+* 				getRequest
+* 				checkPackages
+* 				calculate weight change at stop ->
+* 				weightChange += totalWeight
+* 				stopWeight = { stopId: weight }
+* 				push to stopWeights
+*
+* 			return stopWeights
+* 		}
+*
+* 	 	getVolumeAtStops(routeId) {
+* 			let volumeChange = []
+* 			// Logic:
+* 			// get all stops for the route; for each stop, getRequest, checkPackages ->
+* 			// calculate volume change at stop -> volumeChange = { stopId: volumeChange }
+* 			// push volume change
+*
+* 			return volumeChanges
+* 		}
+*
+* 		checkProximity(request, routes, validRoutes)	{
+* 			// routes will be an array of all routes where distance is within 1 km, could be empty
+*				// for each valid route, push an object into validRoutes: { routeId: [ stopBeforePickupId, stopAfterDropId ] }
+*
+* 			return validRoutes
+* 		}
+*
+* 		checkWeight(request, validRoutes) {
+* 			for each validRoute
+* 				weightChanges = checkWeightChangesAtStops(route)
+* 				use route truckId to get the maxWeight
+* 				weight = getRequestWeight(request)
+*
+*
+* 			return validRoutes
+* 		}
+*
+* 		checkVolume(request) ...
+*
+* 		checkTime(request) ...
+*
+* 		checkProfitability(request, validRoutes) {
+*				forEach route
+* 				previousExpense = cpm * routeLength
+* 				totalExpense = previousExpense + (calculated expense for adding new location)
+* 				if totalExpense is negative, remove route from validRoutes
+*
+* 			return validRoutes
+* 		}
+* }
+*
+* */
+
+
+// throughout the app
+/*
+* this.routes -> all the routes
+*
+* */
+
+
+
 
