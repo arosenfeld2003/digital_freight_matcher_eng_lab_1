@@ -224,12 +224,5 @@ function calculateWorkTime(route: Route): number {
 * */
 
 
-// throughout the app
-/*
-* this.routes -> all the routes
-*
-* */
-
-
 
 

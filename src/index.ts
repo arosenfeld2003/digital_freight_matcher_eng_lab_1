@@ -7,45 +7,46 @@ import * as process from 'process'
 import { Routes } from "./routes";
 
 const app = express()
-dotenv.config() // Load environment variables from .env file
+dotenv.config()
 
-// Configure morgan to log requests
 app.use(morgan('dev'))
-
-// Parse JSON request bodies
 app.use(bodyParser.json())
 
-// Instantiate the DB
 const db = DB.getInstance()
-if (db !== undefined) {
-  void db.createTables().then(val => {
-    // Test the database connection
-    if (val === true) {
-      console.log('DB successfully instantiated')
-      db.seedLocations()
-        .then(() => console.log('Locations seeded'))
-        .catch(err => console.error('Error seeding locations:', err));
+
+async function initializeDatabase() {
+  try {
+    const isTablesCreated = await db.createTables();
+    if (isTablesCreated) {
+      console.log('DB successfully instantiated');
+      await db.seedLocations();
+      await db.seedTrucks();
+      await db.seedRoutes();
+      await db.seedStops();
+      await db.seedClient();
+      await db.seedRequests();
     } else {
-      console.error(val)
+      console.error('Error creating tables');
     }
-  })
-} else {
-  console.log('DB.getInstance() returned undefined')
+  } catch (e) {
+    console.error('Error initializing database:', e);
+    throw e;
+  }
 }
 
-// Define routes and CRUD operations...
-let routes: Routes = {};
+initializeDatabase().then(() => {
+  let routes: Routes = {};
 
-async function initializeRoutes() {
-  routes = await db.fetchRoutes();
-}
+  async function initializeRoutes() {
+    routes = await db.fetchRoutes();
+    app.routes = routes;
+    console.log('Routes fetched and stored locally');
+  }
 
-initializeRoutes().then(() => {
-  console.log('Routes fetched and stored locally');
+  const initializedRoutes = initializeRoutes();
 });
 
-// Start your Express server
-const port = process.env.PG_PORT
+const port = process.env.PG_PORT || 3000;
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`)
-})
+  console.log(`Server is running on port ${port}`);
+});

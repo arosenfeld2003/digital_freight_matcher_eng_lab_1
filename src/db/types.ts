@@ -7,11 +7,9 @@ export interface Route {
 
 export interface Stop {
   id: number
-  request_id: number
   location_id: number
   drop_time: number // extra time necessary for a delivery - constant of 15 mins
-  previous_stop_id: number
-  next_stop_id: number
+  previous_stop_id: number // default null
   route_id: number
 }
 
@@ -19,6 +17,7 @@ export interface Location {
   id: number
   latitude: number
   longitude: number
+  is_hq: boolean // default false
 }
 
 export interface Request {
@@ -27,7 +26,7 @@ export interface Request {
   route_id: number // could be null
   origin_stop_id: number
   destination_stop_id: number
-  income: number
+  cargo_cost: number
   contract_type: string
 }
 
