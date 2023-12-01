@@ -17,6 +17,7 @@ let db: DB;
 describe('DB Tests', () => {
 	beforeAll(async() => {
 		db = DB.getInstance()
+
 		let validLocationRequest: Request = {
 			id: 1,
 			client_id: 1,

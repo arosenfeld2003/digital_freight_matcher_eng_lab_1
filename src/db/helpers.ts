@@ -14,19 +14,36 @@ import {
 import { isWithinRouteDeviation } from "../services/routeService";
 import * as turf from "@turf/turf";
 
-export async function getLocationById(locationId: number): Promise<Location> {
+export async function getLocationByStopId(stopId: number): Promise<Location> {
 	const db = DB.getInstance();
-	let res = await db.query('SELECT * FROM location WHERE id = $1', [locationId]);
+	let res = await db.query('SELECT * FROM location l\n' +
+		'  JOIN stop s ON s.location_id = l.id\n' +
+		'where s.id = $1',
+		[stopId]);
 	return res.rows[0];
 }
 
-export async function getTurfLocationsForRoute(rtl: RouteStopsLinkedList):Promise<Array<TurfLocation>>  {
-	let res: TurfLocation[] = []
+export async function getStopByLocationId(locationId: number): Promise<Stop> {
+	const db = DB.getInstance();
+	let res = await db.query('SELECT * FROM stop WHERE location_id = $1', [locationId]);
+	return res.rows[0];
+}
+
+export async function getStopByTurfLocation(turfLocation: TurfLocation): Promise<TurfLocation> {
+	const db = DB.getInstance();
+	let res = await db.query('SELECT * FROM stop WHERE location_id = $1', [locationId]);
+	return res.rows[0];
+}
+
+// returns an array with the stopId and turfLocation for each stop on a route
+export async function getTurfLocationsForRoute(rtl: RouteStopsLinkedList):Promise<Array<{}>>  {
+	let res: {}[] = [];
 	const stops = rtl.stops;
 	for (let stop of stops) {
-		let stopLocation = await getLocationById(stop[1]['location_id']);
-		let turfLocation: TurfLocation = [stopLocation.longitude, stopLocation.latitude];
-		res.push(turfLocation);
+		let stopLocation = await getStopByLocationId(stop[1]['location_id']);
+		let stopId = stopLocation[1].id
+		let turfLocation: TurfLocation = [stopLocation[1].longitude, stopLocation[1].latitude];
+		res.push({ stopId, turfLocation });
 	}
 	return res;
 }
@@ -35,27 +52,29 @@ export async function checkProximity(request: Request): Promise <Array<{}>> {
 	const db = DB.getInstance();
 	let routesAndStops = await db.fetchRoutesAndStops()
 	let validRoutes: Array<any> = [];
-	const pickup = await getLocationById(request.origin_stop_id);
+	const pickup = await getLocationByStopId(request.origin_stop_id);
 	const pickupTurfLocation: TurfLocation = [pickup.longitude, pickup.latitude];
 	const dropOff = await getLocationById(request.destination_stop_id);
 	const dropOffTurfLocation: TurfLocation = [dropOff.longitude, dropOff.latitude];
 
 	for (let route of routesAndStops) {
 		let routeId = route.id;
-		let locations = await getTurfLocationsForRoute(route);
-		let validLocationsAfterPickup: number[] = []; //
-		let validLocationsAfterDropOff: number[] = [];
-		for (let j = 1; j < locations.length; j++) {
-			let validPickupLocation = isWithinRouteDeviation(pickupTurfLocation, locations[j - 1], locations[j]);
+		let stopsAndTurfLocations = await getTurfLocationsForRoute(route);
+		let stops = stopsAndTurfLocations.map(o => o['stopId'])
+		let turfLocations = stopsAndTurfLocations.map(o => o['turfLocation'])
+		let validStopsAfterPickup: Stop[] = []; //
+		let validStopsAfterDropOff: Stop[] = [];
+		for (let j = 1; j < turfLocations.length; j++) {
+			let validPickupLocation = isWithinRouteDeviation(pickupTurfLocation, turfLocations[j-1], turfLocations[j]);
 			if (validPickupLocation) {
-				validLocationsAfterPickup.push(j)
+				validStopsAfterPickup.push(stops[j]);
 			}
-			let validDropOffLocation = isWithinRouteDeviation(dropOffTurfLocation, locations[j-1], locations[j]);
+			let validDropOffLocation = isWithinRouteDeviation(dropOffTurfLocation, turfLocations[j-1], turfLocations[j]);
 			if (validDropOffLocation) {
-				validLocationsAfterDropOff.push(j);
+				validStopsAfterDropOff.push(stops[j]);
 			}
 		}
-		validRoutes.push({ routeId: { locationsBP: validLocationsAfterPickup, locationsBD: validLocationsAfterDropOff } })
+		validRoutes.push({ routeId: { locationsBP: validStopsAfterPickup, locationsBD: validStopsAfterDropOff } })
 	}
 	return validRoutes;
 }
