@@ -23,7 +23,7 @@ export interface Location {
 export interface Request {
   id: number
   client_id: number
-  route_id: number // could be null
+  route_id: number | null
   origin_stop_id: number
   destination_stop_id: number
   cargo_cost: number
