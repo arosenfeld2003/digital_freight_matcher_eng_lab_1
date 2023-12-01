@@ -1,7 +1,7 @@
 import { Pool } from 'pg'
 import dotenv from 'dotenv'
 import process from 'process'
-import { Routes, StopNode } from "../routes";
+import {Routes, RouteStopsLinkedList, StopNode} from '@db/types';
 
 dotenv.config()
 
@@ -44,18 +44,22 @@ class DB {
     }
   }
 
-  // method to query for existing routes
-  public async fetchRoutes(): Promise<Routes> {
-    const routes: Routes = {};
+  // method to query for existing routes and stops
+  public async fetchRoutesAndStops(): Promise<Routes> {
+    let routes: Routes = [];
     const routeResults = await this.query('SELECT * FROM route');
     if (routeResults && routeResults.rows) {
       for (const route of routeResults.rows) {
-        const stopsResult = await this.query('SELECT * FROM stop WHERE route_id = $1', [route.id]);
+        const stopsResult = await this.query('SELECT * FROM stop s WHERE route_id = $1 ORDER BY s.previous_stop_id NULLS FIRST', [route.id]);
         const stopsMap = new Map<number, StopNode>();
         for (const stop of stopsResult.rows) {
           stopsMap.set(stop.id, stop);
         }
-        routes[route.id] = { id: route.id, stops: stopsMap };
+        const newRoute: RouteStopsLinkedList = {
+          id: route.id,
+          stops: stopsMap
+        }
+        routes.push(newRoute);
       }
     }
     return routes;
@@ -110,7 +114,11 @@ class DB {
                 route_id INT,
                 origin_stop_id INT,
                 destination_stop_id INT,
+                pallet_count INT DEFAULT 0,
+                package_count INT,
                 cargo_cost NUMERIC,
+                cargo_weight NUMERIC,
+                cargo_volume NUMERIC,
                 contract_type VARCHAR(255)
             );
             CREATE TABLE IF NOT EXISTS packagetype (
@@ -227,7 +235,7 @@ class DB {
     return 'Existing Routes are seeded in DB.'
   }
   /*
-    - seed the stops from Too-Big-To-Fail contract (including the origin pickup, plus the 5 drops).
+    - seed the stops from Too-Big-To-Fail contract (including the origin pickup, 5 drops, then return to hq).
     - pre-existing requests/routes will have matching id, 1-5.
     - location_id for the destination stop will be 2-6, accounting for the HQ location id of 1.
   */
@@ -243,6 +251,12 @@ class DB {
       { locationId: 5, dropTime: process.env.DELIVERY_TIME, previousStopId: 7, routeId: 4 },
       { locationId: 1, dropTime: 0, previousStopId: null, routeId: 5 },
       { locationId: 6, dropTime: process.env.DELIVERY_TIME, previousStopId: 9, routeId: 5 },
+      // seed the return stops at hq for each route
+      { locationId: 1, dropTime: 0, previousStopId: 2, routeId: 1 },
+      { locationId: 1, dropTime: 0, previousStopId: 4, routeId: 2 },
+      { locationId: 1, dropTime: 0, previousStopId: 6, routeId: 3 },
+      { locationId: 1, dropTime: 0, previousStopId: 8, routeId: 4 },
+      { locationId: 1, dropTime: 0, previousStopId: 10, routeId: 5 }
     ]
     try {
       for (let i = 0; i < existingStops.length; i++) {
@@ -268,11 +282,11 @@ class DB {
   // seed the 5 existing requests (which mirror the existing routes as there are no added stops on the routes)
   public async seedRequests(): Promise<any> {
     const existingRequests = [
-      { clientId: 1, routeId: 1, originStopId: 1, destinationStopId: 2, cargoCost: 165.8059873, contractType: 'Incurred Contract 1'},
-      { clientId: 1, routeId: 2, originStopId: 3, destinationStopId: 4, cargoCost: 129.4162244, contractType: 'Incurred Contract 1'},
-      { clientId: 1, routeId: 3, originStopId: 5, destinationStopId: 6, cargoCost: 373.2002751, contractType: 'Incurred Contract 1'},
-      { clientId: 1, routeId: 4, originStopId: 7, destinationStopId: 8, cargoCost: 298.77911, contractType: 'Incurred Contract 1'},
-      { clientId: 1, routeId: 5, originStopId: 9, destinationStopId: 10, cargoCost: 131.741886, contractType: 'Incurred Contract 1'},
+      { clientId: 1, routeId: 1, originStopId: 1, destinationStopId: 2, cargoCost: 165.8059873, contractType: 'Incurred Contract 1', pallet_count: 20, package_count: 0, cargoWeight: 8800, cargoVolume: 1280 },
+      { clientId: 1, routeId: 2, originStopId: 3, destinationStopId: 4, cargoCost: 129.4162244, contractType: 'Incurred Contract 1',  pallet_count: 21, package_count: 0, cargoWeight: 9240, cargoVolume: 1344 },
+      { clientId: 1, routeId: 3, originStopId: 5, destinationStopId: 6, cargoCost: 373.2002751, contractType: 'Incurred Contract 1', pallet_count: 22, package_count: 0,  cargoWeight: 9680, cargoVolume: 1408 },
+      { clientId: 1, routeId: 4, originStopId: 7, destinationStopId: 8, cargoCost: 298.77911, contractType: 'Incurred Contract 1', pallet_count: 17, package_count: 0, cargoWeight: 7480, cargoVolume: 1088 },
+      { clientId: 1, routeId: 5, originStopId: 9, destinationStopId: 10, cargoCost: 131.741886, contractType: 'Incurred Contract 1', pallet_count: 18, package_count: 0, cargoWeight: 7920, cargoVolume: 1152 }
     ]
     try {
       for (let i = 0; i < existingRequests.length; i++) {

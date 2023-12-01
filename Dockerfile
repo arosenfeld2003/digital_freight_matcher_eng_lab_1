@@ -1,5 +1,5 @@
 # Use an official Node.js runtime as a parent image
-FROM node:14
+FROM node:19
 
 # Set the working directory in the container
 WORKDIR .
@@ -22,4 +22,4 @@ RUN npm install --save-dev typescript
 RUN npx -p typescript tsc --init
 
 # Define the command to run your application
-CMD ["node", "src/index.js"]
+CMD ["ts-node", "src/index.ts"]

@@ -18,7 +18,7 @@ async function initializeDatabase() {
   try {
     const isTablesCreated = await db.createTables();
     if (isTablesCreated) {
-      console.log('DB successfully instantiated');
+      console.log('DB successfully instantiated...');
       await db.seedLocations();
       await db.seedTrucks();
       await db.seedRoutes();
@@ -35,15 +35,7 @@ async function initializeDatabase() {
 }
 
 initializeDatabase().then(() => {
-  let routes: Routes = {};
-
-  async function initializeRoutes() {
-    routes = await db.fetchRoutes();
-    app.routes = routes;
-    console.log('Routes fetched and stored locally');
-  }
-
-  const initializedRoutes = initializeRoutes();
+  console.log('DB seeded with Incurred Contract data...')
 });
 
 const port = process.env.PG_PORT || 3000;

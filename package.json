@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/arosenfeld2003/digital_freight_matcher_eng_lab_1#readme",
   "dependencies": {
+    "@turf/turf": "^6.5.0",
     "@types/express": "^4.17.20",
     "@types/node": "^20.8.9",
     "axios": "^1.6.0",

@@ -145,18 +145,8 @@ function calculateWorkTime(route: Route): number {
 }
 
 /*
-* interface Route {
-* 	- locations
-* 	- stops
-* }
-*
-* interface Request {
-*
-* }
-*
-*
-*
-* Request (input): pickup, dropoff, # of packages
+
+* Request (input): pickup, drop-off, # of packages
 * 	-> input total # of packages into the DB with request ID
 *
 * // Program Logic
@@ -192,7 +182,7 @@ function calculateWorkTime(route: Route): number {
 *
 * 		checkProximity(request, routes, validRoutes)	{
 * 			// routes will be an array of all routes where distance is within 1 km, could be empty
-*				// for each valid route, push an object into validRoutes: { routeId: [ stopBeforePickupId, stopAfterDropId ] }
+*				// for each valid route, push an object into validRoutes: { routeId: [ previousStopId, nextStopId ] }
 *
 * 			return validRoutes
 * 		}
@@ -213,7 +203,7 @@ function calculateWorkTime(route: Route): number {
 *
 * 		checkProfitability(request, validRoutes) {
 *				forEach route
-* 				previousExpense = cpm * routeLength
+* 				previousExpense = cost-per-mile * routeLength
 * 				totalExpense = previousExpense + (calculated expense for adding new location)
 * 				if totalExpense is negative, remove route from validRoutes
 *

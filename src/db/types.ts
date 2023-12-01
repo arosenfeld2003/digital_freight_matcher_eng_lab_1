@@ -8,7 +8,7 @@ export interface Route {
 export interface Stop {
   id: number
   location_id: number
-  drop_time: number // extra time necessary for a delivery - constant of 15 mins
+  drop_time: number // time for pickup/drop-off - constant 15 mins
   previous_stop_id: number // default null
   route_id: number
 }
@@ -58,3 +58,21 @@ export interface Client {
   company_name: string
   company_client_id: number
 }
+
+export type StopNode = {
+  id: number;
+  request_id: number;
+  location_id: number;
+  drop_time: number;
+  previous_stop_id: number | null;
+  route_id: number;
+};
+
+export type RouteStopsLinkedList = {
+  id: number; // routeId
+  stops: Map<number, StopNode>; // Keyed by stop ID for easy access
+};
+
+export type Routes = RouteStopsLinkedList[];
+
+export type TurfLocation = [number, number];
