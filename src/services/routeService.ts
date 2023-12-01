@@ -17,10 +17,10 @@ import {
 import { getTurfLocationsForRoute, getLocationById } from "@db/helpers";
 import * as turf from "@turf/turf";
 
-export function isWithinRouteDeviation(newLocation: TurfLocation, startLocation: TurfLocation, endLocation: TurfLocation): boolean {
+export function isWithinRouteDeviation(newLocation: TurfLocation, previousLocation: TurfLocation, nextLocation: TurfLocation): boolean {
 	const location = turf.point(newLocation);
-	const start = turf.point(startLocation);
-	const end = turf.point(endLocation);
+	const start = turf.point(previousLocation);
+	const end = turf.point(nextLocation);
 	const lineSegment = turf.lineString([start.geometry.coordinates, end.geometry.coordinates]);
 	const nearestPointOnLine = turf.nearestPointOnLine(lineSegment, location);
 	const distanceToPoint = turf.distance(location, nearestPointOnLine, { units: 'kilometers' });

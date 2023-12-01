@@ -43,13 +43,19 @@ export async function checkProximity(request: Request): Promise <Array<{}>> {
 	for (let route of routesAndStops) {
 		let routeId = route.id;
 		let locations = await getTurfLocationsForRoute(route);
-		for (let j = 0; j < locations.length; j++) {
-			let isValid = isWithinRouteDeviation(locations[j], pickupTurfLocation, dropOffTurfLocation);
-			if (isValid) {
-				validRoutes.push({ routeId: [ request.origin_stop_id, request.destination_stop_id ] })
+		let validLocationsBeforePickup: number[] = []; //
+		let validLocationsBeforeDropOff: number[] = [];
+		for (let j = 1; j < locations.length; j++) {
+			let validPickupLocation = isWithinRouteDeviation(pickupTurfLocation, locations[j - 1], locations[j]);
+			if (validPickupLocation) {
+				validLocationsBeforePickup.push(j - 1)
+			}
+			let validDropOffLocation = isWithinRouteDeviation(dropOffTurfLocation, locations[j-1], locations[j]);
+			if (validDropOffLocation) {
+				validLocationsBeforeDropOff.push(j - 1);
 			}
 		}
+		validRoutes.push({ routeId: { locationsBP: validLocationsBeforePickup, locationsBD: validLocationsBeforeDropOff } })
 	}
-
 	return validRoutes;
 }
