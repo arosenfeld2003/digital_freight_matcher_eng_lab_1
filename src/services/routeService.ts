@@ -14,7 +14,7 @@ import {
 	RouteLinkedList,
 	TurfLocation
 } from '@db/types'
-import { getTurfLocationsForRoute, getLocationById, checkProximity } from "@db/helpers";
+import { getStopsAndTurfLocationsForRoute, getLocationById, checkProximity } from "@db/helpers";
 import * as turf from "@turf/turf";
 
 export function isWithinRouteDeviation(newLocation: TurfLocation, previousLocation: TurfLocation, nextLocation: TurfLocation): boolean {
