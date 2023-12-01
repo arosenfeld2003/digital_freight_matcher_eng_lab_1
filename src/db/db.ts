@@ -101,7 +101,7 @@ class DB {
                 location_id INT,
                 drop_time INT,
                 previous_stop_id INT DEFAULT NULL,
-                route_id INT
+                route_id INT DEFAULT NULL
             );
             CREATE TABLE IF NOT EXISTS client (
                 id SERIAL PRIMARY KEY,
@@ -111,7 +111,7 @@ class DB {
             CREATE TABLE IF NOT EXISTS request (
                 id SERIAL PRIMARY KEY,
                 client_id INT,
-                route_id INT,
+                route_id INT DEFAULT NULL,
                 origin_stop_id INT,
                 destination_stop_id INT,
                 pallet_count INT DEFAULT 0,
@@ -355,6 +355,33 @@ class DB {
     return result.rowCount > 0;
   }
 
+  private async addLocationsFromRequest (
+    pickup: number[], dropOff: number[],
+  ): Promise<Array<any>|Boolean> {
+    try {
+      const origin = await this.query('INSERT INTO location (latitude, longitude) VALUES($1, $2) RETURNING *', [pickup[0], pickup[1]]);
+      const originLocation = origin.rows[0];
+      const destination = await this.query('INSERT INTO location (latitude, longitude) VALUES($1, $2) RETURNING *', [dropOff[0], dropOff[1]]);
+      const destinationLocation = destination.rows[0];
+      return [originLocation, destinationLocation];
+    } catch (e) {
+      console.error(e);
+      return false;
+    }
+  }
+
+  private async addStopsFromRequestLocations(locations: number[]): Promise<Array<any>|Boolean> {
+    try {
+      const origin = await this.query('INSERT INTO stop (latitude, longitude) VALUES($1, $2) RETURNING *', [pickup[0], pickup[1]]);
+      const originLocation = origin.rows[0];
+      const destination = await this.query('INSERT INTO location (latitude, longitude) VALUES($1, $2) RETURNING *', [dropOff[0], dropOff[1]]);
+      const destinationLocation = destination.rows[0];
+      return [originLocation, destinationLocation];
+    } catch(e) {
+      console.error(e);
+      return false;
+    }
+  }
 }
 
 export default DB
