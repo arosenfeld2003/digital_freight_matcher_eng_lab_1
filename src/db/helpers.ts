@@ -33,7 +33,7 @@ export async function getTurfLocationsForRoute(rtl: RouteStopsLinkedList):Promis
 
 export async function checkProximity(request: Request): Promise <Array<{}>> {
 	const db = DB.getInstance();
-	let routesAndStops = await db.fetchRoutesAndStops()
+	let routesAndStops = await db.fetchRoutesAndStops()                                                                                                                     
 	let validRoutes: Array<any> = [];
 	const pickup = await getLocationById(request.origin_stop_id);
 	const pickupTurfLocation: TurfLocation = [pickup.longitude, pickup.latitude];

@@ -42,3 +42,8 @@ const port = process.env.PG_PORT || 3000;
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
+
+//input test data?
+//load csv and seed?
+
+// get entries
