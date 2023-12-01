@@ -14,7 +14,7 @@ import {
 	RouteLinkedList,
 	TurfLocation
 } from '@db/types'
-import { getTurfLocationsForRoute, getLocationById } from "@db/helpers";
+import { getTurfLocationsForRoute, getLocationById, checkProximity } from "@db/helpers";
 import * as turf from "@turf/turf";
 
 export function isWithinRouteDeviation(newLocation: TurfLocation, previousLocation: TurfLocation, nextLocation: TurfLocation): boolean {
@@ -31,11 +31,4 @@ const db = DB.getInstance();
 async function getRoutes() { return await db.fetchRoutesAndStops() }
 const routes = await getRoutes();
 
-async function checkProximity(request: Request, routes: Routes):
-	Promise<> {
-	// validRoutes will be an array of all routes where distance is within 1 km, could be empty
-	//  { routeId: [ pickupPreviousStop, deliveryPreviousStop ] }
 
-	}
-	return validRoutes
-}
