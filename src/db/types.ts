@@ -76,3 +76,18 @@ export type RouteStopsLinkedList = {
 export type Routes = RouteStopsLinkedList[];
 
 export type TurfLocation = [number, number];
+
+export type CheckProximityOutput = Array<{
+  routeId: number;
+  stopsAP: Stop[];
+  stopsAD: Stop[];
+}>;
+
+export type EntryPoint = {
+  stop_after_pickup: Stop,
+  stops_after_dropoff: Stop[]
+};
+
+export type EntryPoints = {
+  [routeId: number]: EntryPoint[];
+};

@@ -65,6 +65,24 @@ class DB {
     return routes;
   }
 
+  public async fetchRouteAndStopsByID(routeId: number): Promise<RouteStopsLinkedList | null> {
+    const routeResult = await this.query('SELECT * FROM route WHERE id = $1', [routeId]);
+    if (routeResult && routeResult.rows && routeResult.rows.length > 0) {
+      const route = routeResult.rows[0];
+      const stopsResult = await this.query('SELECT * FROM stop s WHERE route_id = $1 ORDER BY s.previous_stop_id NULLS FIRST', [route.id]);
+      const stopsMap = new Map<number, StopNode>();
+      for (const stop of stopsResult.rows) {
+        stopsMap.set(stop.id, stop);
+      }
+      const newRoute: RouteStopsLinkedList = {
+        id: route.id,
+        stops: stopsMap
+      }
+      return newRoute;
+    }
+    return null;
+  }
+
   public async createTables (): Promise<Error | true> {
     try {
       const getTablesQuery = `
