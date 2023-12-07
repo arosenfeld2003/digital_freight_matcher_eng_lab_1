@@ -48,6 +48,12 @@ export async function getStopsAndTurfLocationsForRoute(rtl: RouteStopsLinkedList
 	return res;
 }
 
+export async function getStopTimesByRouteId(routeId: number): Promise<number> {
+	//TODO: implement
+	//Not strictly necessary for deadline as we may reference env variable directly
+	return 0;
+}
+
 export async function getTruckMaxWeightByRouteId(routeId: number): Promise<number> {
 	const db = DB.getInstance();
 	let res = await db.query('SELECT max_weight FROM truck WHERE route_id = $1', [routeId]);
@@ -70,6 +76,22 @@ export async function getTruckMaxVolumeByRouteId(routeId: number): Promise<numbe
   contract_type: string
 }
 */
+
+
+export async function getDistanceByStop(stop: Stop): Promise<number> {
+
+	const db = DB.getInstance();
+	
+	let prev_stopLocation = await getLocationByStopId(stop.previous_stop_id);
+	let stopLocation = await getLocationByStopId(stop.id);
+	
+	let prevTurfLocation: TurfLocation = [prev_stopLocation.longitude, prev_stopLocation.latitude];
+	let stopTurfLocation: TurfLocation = [stopLocation.longitude, stopLocation.latitude];
+
+	//calculate distance between stops using turf (units in km)
+	let distance = turf.distance(prevTurfLocation, stopTurfLocation, {units: 'kilometers'});
+	return distance;
+}
 
 export async function getWeightByStop(stop: Stop): Promise<number> {
 	const db = DB.getInstance();
@@ -119,6 +141,39 @@ export async function getVolumebyRequestId(requestId: number): Promise<number>
     const db = DB.getInstance();
     let res = await db.query('SELECT SUM(volume) FROM package WHERE request_id = $1', [requestId]);
     return res.rows[0].sum;
+}
+
+//returns infinity if any of the three locations could not be found
+export async function getInsertedDisByStopID(stopId_original: number, stopId_inserted: number): Promise<number>
+{
+	const db = DB.getInstance();
+	let stop_original = (await db.query('SELECT * FROM stop WHERE id = $1', [stopId_original])).rows[0];
+
+	//Format note: I find it difficult to read these queries, but I'm not sure what the standards or performance implications are
+	
+	const original_end_loc = (await db.query('SELECT location.* FROM stop JOIN location ON stop.location_id = location.id WHERE stop.id = $1',
+			[stop_original.id])).rows[0];
+	if (!original_end_loc) return Infinity;
+
+	const original_start_loc = (await db.query('SELECT location.* FROM stop JOIN location ON stop.location_id = location.id WHERE stop.id = $1',
+			[stop_original.previous_stop_id])).rows[0];
+	if (!original_start_loc) return Infinity;
+
+	const new_middle_loc = (await db.query('SELECT location.* FROM stop JOIN location ON stop.location_id = location.id WHERE stop.id = $1',
+			[stopId_inserted])).rows[0];
+	if (!new_middle_loc) return Infinity;
+	
+	//original_end_loc
+	const C = turf.point([original_end_loc.longitude, original_end_loc.latitude]);
+	//original_start_loc
+	const A = turf.point([original_start_loc.longitude, original_start_loc.latitude]);
+	//new_middle_loc
+	const B = turf.point([new_middle_loc.longitude, new_middle_loc.latitude]);
+
+	//calculate distance from A to B to C using turf (units in km)
+	let distance = turf.distance(A, B, {units: 'kilometers'}) + turf.distance(B, C, {units: 'kilometers'});
+	
+	return distance;
 }
 
 export async function checkProximity(request: Request): Promise<CheckProximityOutput> {

@@ -8,6 +8,8 @@ async function getAvailableWeightStopDict(routeId: number, request: Request): Pr
     //get db singleton
     const db = DB.getInstance();
     const truck_max_weight: number = await getTruckMaxWeightByRouteId(routeId);
+    
+    //stops may actually be "stopNode" objects
     let stops: Stop[] = [];
     const route_and_stops = await db.fetchRouteAndStopsByID(routeId);
     if (route_and_stops != undefined) {
@@ -16,6 +18,7 @@ async function getAvailableWeightStopDict(routeId: number, request: Request): Pr
 
     //TODO: error handling
 
+    //parrallelize this?
     let weight_changes:{[key: number]: number } = {};
     for (let stop of stops) {
         weight_changes[stop.id] = await getWeightByStop(stop);
@@ -36,8 +39,8 @@ export async function checkWeight(routeId: number, entryPoint_arr: EntryPoint[],
     //get weight of request
     const required_weight = await getWeightbyRequestId(request.id);
 
-    //transform entryPoint into boolean array where true means the stop has at least the required weight
-    let boolean_array_base: boolean[] = entryPoint_arr[0].stops_after_dropoff.map((stop) => {return available_weights[stop.id] >= required_weight;});
+    //transform entryPoint into a referenced boolean array where true means the stop has at least the required weight
+    const boolean_array_base: boolean[] = entryPoint_arr[0].stops_after_dropoff.map((stop) => {return available_weights[stop.id] >= required_weight;});
     
     //make array 2D where each row represents different stop_after_pickup and columns are filled with the base array from after the stop after pickip
     let boolean_array: boolean[][] = [];

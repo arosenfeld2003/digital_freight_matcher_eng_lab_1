@@ -8,6 +8,8 @@ async function getAvailableVolumeStopDict(routeId: number, request: Request): Pr
     //get db singleton
     const db = DB.getInstance();
     const truck_max_volume: number = await getTruckMaxVolumeByRouteId(routeId);
+
+    //stops may actually be "stopNode" objects
     let stops: Stop[] = [];
     const route_and_stops = await db.fetchRouteAndStopsByID(routeId);
     if (route_and_stops != undefined) {
@@ -36,8 +38,8 @@ export async function checkVolume(routeId: number, entryPoint_arr: EntryPoint[],
     //get volume of request
     const required_volume = await getVolumebyRequestId(request.id);
 
-    //transform entryPoint into boolean array where true means the stop has at least the required volume
-    let boolean_array_base: boolean[] = entryPoint_arr[0].stops_after_dropoff.map((stop) => {return available_volumes[stop.id] >= required_volume;});
+    //transform entryPoint into a referenced boolean array where true means the stop has at least the required volume
+    const boolean_array_base: boolean[] = entryPoint_arr[0].stops_after_dropoff.map((stop) => {return available_volumes[stop.id] >= required_volume;});
     
     //make array 2D where each row represents different stop_after_pickup and columns are filled with the base array from after the stop after pickip
     let boolean_array: boolean[][] = [];

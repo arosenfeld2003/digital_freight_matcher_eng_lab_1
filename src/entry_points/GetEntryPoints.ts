@@ -7,7 +7,7 @@ import { CheckProximityOutput } from '../db/types';
 import { checkWeight } from '../entry_points/checkWeight';
 import { checkVolume } from '../entry_points/checkVolume';
 import { checkTime } from '../entry_points/checkTime';
-import { checkDistance } from '../entry_points/checkDistance';
+import { checkDistance } from './CheckTime';
 
 function convertCheckProximityOutputToEntryPoints(data: CheckProximityOutput): EntryPoints {
   const entryPoints: EntryPoints = {};
@@ -26,7 +26,7 @@ function convertCheckProximityOutputToEntryPoints(data: CheckProximityOutput): E
 
 //filter functions
 async function createFilterArray(routeId: string, route_data: EntryPoint[], request: Request): Promise<boolean[][]> {
-  const filters = [checkWeight, checkVolume /*, checkTime, checkDistance, checkProfit*/]; //TODO: add more filters
+  const filters = [checkWeight, checkVolume /*, checkTime, checkProfit*/]; //TODO: add more filters //Could be improved with static singleton classes
 
   const filter_results = await Promise.all(filters.map(filter => filter(routeId, route_data, request)));
   
