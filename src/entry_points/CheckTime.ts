@@ -1,8 +1,7 @@
-import { EntryPoint } from "../models/EntryPoint";
-import { Request } from "../models/Request";
-import { Stop } from "../models/Stop";
+import { EntryPoint, Request, Stop } from "../db/types";
 import { DB } from "../db/db";
 import { getDistanceByStop } from "@db/helpers";
+import { getInsertedDisByStopID } from "@db/helpers";
 import * as dotenv from "dotenv";
 
 /*
@@ -70,7 +69,11 @@ async function total_map(my_map: Map<any, number>): Promise<number>
 async function createModifiedDistanceMap(base_dis_map: Map<number, number>, stopId_AD: number): Promise<Map<number, number>>
 {
     let mod_dis_map = new Map<number, number>(base_dis_map);
-    // TODO: Modify the map as needed
+    
+    for (let key of mod_dis_map.keys())
+    {
+        mod_dis_map[key] = getInsertedDisByStopID(key, stopId_AD);
+    }
 
     return mod_dis_map;
 }
@@ -113,11 +116,17 @@ export async function checkTime(routeId: number, entryPoint_arr: EntryPoint[], r
 
     ///GENERATE BOOLEAN ARRAY GIVEN DISTANCE CONSTRAINT ============================
     
-    for (key in stopAD_dis_map.keys())
+    let re_boolean_array = [];
+    for (let [idx, entry_point] of Object.entries(entryPoint_arr))
     {
-        
+        const effective_max = available_distance - await getInsertedDisByStopID(entry_point.stop_after_pickup.id, request.origin_stop_id);
+        //create boolean array where true for i means getInsertedDisByStopID(entryPoint.stops_after_dropoff[i].id, request.destination_stop_id) <= effective_max
+        for (const my_stop of entry_point.stops_after_dropoff)
+        {
+            const test = await getInsertedDisByStopID(my_stop.id, request.destination_stop_id);
+            re_boolean_array[idx] = test <= effective_max;
+        }
     }
-
-    //return not implemented
-    return [];
+    
+    return re_boolean_array;
 }
