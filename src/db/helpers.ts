@@ -10,10 +10,17 @@ import {
 	Client,
 	RouteStopsLinkedList,
 	TurfLocation,
-	CheckProximityOutput
+	CheckProximityOutput,
+	StopNode
 } from '@db/types'
 import { isWithinRouteDeviation } from "../services/routeService";
 import * as turf from "@turf/turf";
+
+export async function getTruckByRouteId(routeId: number): Promise<Truck> {
+	const db = DB.getInstance();
+	let res = await db.query('SELECT * FROM truck WHERE route_id = $1', [routeId]);
+	return res.rows[0];
+}
 
 export async function getLocationByStopId(stopId: number): Promise<Location> {
 	const db = DB.getInstance();
@@ -27,6 +34,13 @@ export async function getLocationByStopId(stopId: number): Promise<Location> {
 export async function getStopByLocationId(locationId: number): Promise<Stop> {
 	const db = DB.getInstance();
 	let res = await db.query('SELECT * FROM stop WHERE location_id = $1', [locationId]);
+	return res.rows[0];
+}
+
+// Not sure why Stop and StopNode are separate types, but converting between them for now
+export async function convertStopNodeToStop(stopNode: StopNode): Promise<Stop> {
+	const db = DB.getInstance();
+	let res = await db.query('SELECT * FROM stop WHERE id = $1', [stopNode.id]);
 	return res.rows[0];
 }
 
@@ -76,6 +90,16 @@ export async function getTruckMaxVolumeByRouteId(routeId: number): Promise<numbe
   contract_type: string
 }
 */
+
+// Not in use
+// export async function getStopsByRequestId(requestId: number): Promise<[Stop, Stop]> {
+// 	const db = DB.getInstance();
+// 	let res = await db.query('SELECT * FROM request WHERE id = $1', [requestId]);
+// 	let request = res.rows[0];
+// 	let originStop = await getStopById(request.origin_stop_id);
+// 	let destinationStop = await getStopById(request.destination_stop_id);
+// 	return [originStop, destinationStop];
+// }
 
 
 export async function getDistanceByStop(stop: Stop): Promise<number> {
@@ -141,6 +165,12 @@ export async function getVolumebyRequestId(requestId: number): Promise<number>
     const db = DB.getInstance();
     let res = await db.query('SELECT SUM(volume) FROM package WHERE request_id = $1', [requestId]);
     return res.rows[0].sum;
+}
+
+export async function getRouteById(routeId: number): Promise<Route> {
+	const db = DB.getInstance();
+	let res = await db.query('SELECT * FROM route WHERE id = $1', [routeId]);
+	return res.rows[0];
 }
 
 //returns infinity if any of the three locations could not be found

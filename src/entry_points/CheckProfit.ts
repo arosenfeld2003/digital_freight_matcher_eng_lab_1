@@ -1,4 +1,4 @@
-import { getStopsByRequestId } from '@db/helpers';
+import { getRouteById, getStopsByRequestId } from '@db/helpers';
 import { EntryPoint } from '../db/types';
 import { Request } from '../db/types';
 import { Stop } from '../db/types';
@@ -7,6 +7,8 @@ import { getDistanceByStop } from '@db/helpers';
 import { Truck } from '@db/types';
 import { getWeightbyRequestId } from '@db/helpers';
 import { getVolumebyRequestId } from '@db/helpers';
+import { getTruckByRouteId } from '@db/helpers';
+import { getDistanceArr } from './DistanceMap';
 
 async function get_truck_utilization(truck: Truck, request: Request): number
 {
@@ -21,27 +23,29 @@ async function get_truck_utilization(truck: Truck, request: Request): number
 
 export async function checkProfit(routeId: number, entryPoint_arr: EntryPoint[], request: Request): Promise<boolean[][]>
 {
-    const [origin_stop, dest_stop] = await Promise.all([
+    const [route, origin_stop, dest_stop, truck] = await Promise.all([
+        getRouteById(routeId),
         getStopById(request.origin_stop_id),
-        getStopById(request.destination_stop_id)
+        getStopById(request.destination_stop_id),
+        getTruckByRouteId(routeId)
     ]);
     
-    ///CALCULATE GROSS INCOME for request ===============================================================
-    const truck_utilization = await get_truck_utilization(routeId, request);
+    ///CALCULATE GROSS INCOME for **new** request ===============================================================
+    const truck_utilization = await get_truck_utilization(truck, request);
     const km_traveled = await getDistanceByStop(dest_stop);
+    const profit_margin = parseFloat(process.env.PROFIT_MARGIN ?? '0.5');
+    const income_from_taking_request = truck_utilization * km_traveled  * (1 / 1.60934) * (1 + profit_margin);
     
+    const pre_cost_profit = income_from_taking_request + route.profitability;
 
+    ///Calculate max distance for request to be profitable =======================================================
+    const effective_max = pre_cost_profit / (truck.cpm * (1 / 1.60934));
 
-    /*    
-    const truck_max_weight = await getTruckMaxWeightByRouteId(routeId);
-    const truck_max_volume = await getTruckMaxVolumeByRouteId(routeId);
+    ///create 2d number array of distances traveled
+    const dis_arr = await getDistanceArr(routeId, entryPoint_arr, request);
 
-    const request_weight = await getWeightbyRequestId(request.id);
-    const request_volume = await getVolumebyRequestId(request.id);
-    */
+    ///convert dis_arr to 2d boolean array where true means the stop is within the effective_max
+    const boolean_arr = dis_arr.map((row) => row.map((value) => {return value <= effective_max;}));
 
-    //env variable used to agree km to miles conversion
-    const gross_income = truck_utilization * km_traveled * cost_per_mile * (1 / 1.60934);
-    //return not impolemnted
-    return [];
+    return boolean_arr;
 }

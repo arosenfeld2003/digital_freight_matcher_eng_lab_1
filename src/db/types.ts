@@ -2,7 +2,7 @@ export interface Route {
   id: number
   truck_id: number
   max_time: number // max time for a route
-  profitability: number
+  profitability: number // could be renamed profit, value may be negative
 }
 
 export interface Stop {
