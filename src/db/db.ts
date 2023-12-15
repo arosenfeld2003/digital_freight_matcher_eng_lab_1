@@ -370,13 +370,15 @@ class DB {
     }
   }
 
-  private async addStopsFromRequestLocations(locations: number[]): Promise<Array<any>|Boolean> {
+  private async addStopsFromRequestLocations(locations: [{}]): Promise<Array<any>|Boolean> {
     try {
-      const origin = await this.query('INSERT INTO stop (latitude, longitude) VALUES($1, $2) RETURNING *', [pickup[0], pickup[1]]);
-      const originLocation = origin.rows[0];
-      const destination = await this.query('INSERT INTO location (latitude, longitude) VALUES($1, $2) RETURNING *', [dropOff[0], dropOff[1]]);
-      const destinationLocation = destination.rows[0];
-      return [originLocation, destinationLocation];
+      for (let l of locations) {
+        const origin = await this.query('INSERT INTO stop (locationId, ) VALUES($1, $2) RETURNING *', [pickup[0], pickup[1]]);
+        const originLocation = origin.rows[0];
+        const destination = await this.query('INSERT INTO location (latitude, longitude) VALUES($1, $2) RETURNING *', [dropOff[0], dropOff[1]]);
+        const destinationLocation = destination.rows[0];
+        return [originLocation, destinationLocation];
+      }
     } catch(e) {
       console.error(e);
       return false;
